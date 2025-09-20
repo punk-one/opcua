@@ -539,6 +539,25 @@ func DialTimeout(d time.Duration) Option {
 	}
 }
 
+// LocalAddr sets the local address to bind to when establishing the connection.
+// This allows specifying which network interface to use for the connection.
+// Example: "192.168.100.10:0" to use the network interface with IP 192.168.100.10
+func LocalAddr(addr string) Option {
+	return func(cfg *Config) error {
+		if addr == "" {
+			cfg.dialer.Dialer.LocalAddr = nil
+			return nil
+		}
+
+		localAddr, err := net.ResolveTCPAddr("tcp", addr)
+		if err != nil {
+			return fmt.Errorf("invalid local address %s: %v", addr, err)
+		}
+		cfg.dialer.Dialer.LocalAddr = localAddr
+		return nil
+	}
+}
+
 // MaxMessageSize sets the maximum message size for the UACP handshake.
 func MaxMessageSize(n uint32) Option {
 	return func(cfg *Config) error {
