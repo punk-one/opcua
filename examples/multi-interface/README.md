@@ -1,52 +1,52 @@
-# 多网卡环境下的OPC UA连接示例
+# OPC UA Connection Example in Multi-Interface Environment
 
-本示例演示了如何在多网卡环境下通过指定网卡连接到不同的OPC UA设备。
+This example demonstrates how to connect to different OPC UA devices by specifying network interfaces in a multi-interface environment.
 
-## 使用场景
+## Use Cases
 
-当你的计算机有多个网络接口，并且需要通过不同的网卡连接到不同的OPC UA设备时，这个功能非常有用。
+When your computer has multiple network interfaces and you need to connect to different OPC UA devices through different network cards, this functionality is very useful.
 
-**典型场景：**
-- 电脑有两个网卡：`192.168.100.10` 和 `192.168.100.20`
-- 两个网卡都连接了OPC UA设备，设备IP都是 `192.168.100.1`
-- 需要通过指定的网卡连接到对应的设备
+**Typical Scenario:**
+- Computer has two network cards: `192.168.100.10` and `192.168.100.20`
+- Both network cards are connected to OPC UA devices with IP `192.168.100.1`
+- Need to connect to the corresponding devices through specified network cards
 
-## 主要功能
+## Main Features
 
-### 新增的配置选项
+### New Configuration Options
 
 ```go
-// LocalAddr 设置连接时要绑定的本地地址
-// 这允许指定使用哪个网络接口进行连接
-// 示例: "192.168.100.10:0" 使用IP为192.168.100.10的网络接口
+// LocalAddr sets the local address to bind when connecting
+// This allows specifying which network interface to use for connection
+// Example: "192.168.100.10:0" uses the network interface with IP 192.168.100.10
 opcua.LocalAddr("192.168.100.10:0")
 ```
 
-### 使用方法
+### Usage
 
 ```go
-// 通过第一个网卡连接
+// Connect through the first network card
 client1, err := opcua.NewClient("opc.tcp://192.168.100.1:4840", 
-    opcua.LocalAddr("192.168.100.10:0"),  // 指定本地网卡
+    opcua.LocalAddr("192.168.100.10:0"),  // Specify local network card
     opcua.SecurityPolicy(ua.SecurityPolicyURINone),
     opcua.SecurityModeString("None"),
 )
 
-// 通过第二个网卡连接
+// Connect through the second network card
 client2, err := opcua.NewClient("opc.tcp://192.168.100.1:4840", 
-    opcua.LocalAddr("192.168.100.20:0"),  // 指定另一个本地网卡
+    opcua.LocalAddr("192.168.100.20:0"),  // Specify another local network card
     opcua.SecurityPolicy(ua.SecurityPolicyURINone),
     opcua.SecurityModeString("None"),
 )
 ```
 
-## 运行示例
+## Running the Example
 
 ```bash
-# 基本用法
+# Basic usage
 go run multi-interface.go
 
-# 指定自定义参数
+# Specify custom parameters
 go run multi-interface.go \
     -endpoint1="opc.tcp://192.168.100.1:4840" \
     -endpoint2="opc.tcp://192.168.100.1:4840" \
@@ -55,74 +55,74 @@ go run multi-interface.go \
     -node="i=2258"
 ```
 
-## 参数说明
+## Parameter Description
 
-- `-endpoint1`: 第一个OPC UA服务器端点
-- `-endpoint2`: 第二个OPC UA服务器端点  
-- `-local1`: 连接第一个设备时使用的本地网卡地址
-- `-local2`: 连接第二个设备时使用的本地网卡地址
-- `-node`: 要读取的节点ID
+- `-endpoint1`: First OPC UA server endpoint
+- `-endpoint2`: Second OPC UA server endpoint  
+- `-local1`: Local network card address to use when connecting to the first device
+- `-local2`: Local network card address to use when connecting to the second device
+- `-node`: Node ID to read
 
-## 网络配置要求
+## Network Configuration Requirements
 
-1. **确保网卡配置正确**
+1. **Ensure Network Card Configuration is Correct**
    ```bash
-   # Linux/Windows查看网络接口
+   # View network interfaces on Linux/Windows
    ip addr show    # Linux
    ipconfig        # Windows
    ```
 
-2. **确保路由配置正确**
+2. **Ensure Routing Configuration is Correct**
    ```bash
-   # 添加路由规则（如果需要）
+   # Add routing rules (if needed)
    route add -net 192.168.100.0/24 gw 192.168.100.1 dev eth0
    ```
 
-3. **防火墙配置**
-   确保防火墙允许OPC UA通信（默认端口4840）
+3. **Firewall Configuration**
+   Ensure the firewall allows OPC UA communication (default port 4840)
 
-## 故障排除
+## Troubleshooting
 
-### 常见错误
+### Common Errors
 
 1. **"bind: cannot assign requested address"**
-   - 检查指定的本地地址是否存在于系统中
-   - 确保网卡已正确配置并启用
+   - Check if the specified local address exists in the system
+   - Ensure the network card is properly configured and enabled
 
 2. **"no route to host"**
-   - 检查网络路由配置
-   - 确保目标设备可达
+   - Check network routing configuration
+   - Ensure the target device is reachable
 
-3. **连接超时**
-   - 检查防火墙设置
-   - 验证OPC UA服务器是否正在运行
-   - 确认端口号是否正确
+3. **Connection timeout**
+   - Check firewall settings
+   - Verify that the OPC UA server is running
+   - Confirm the port number is correct
 
-### 调试技巧
+### Debugging Tips
 
-1. **使用ping测试网络连通性**
+1. **Use ping to test network connectivity**
    ```bash
-   # 从指定网卡ping目标设备
+   # Ping target device from specified network card
    ping -I 192.168.100.10 192.168.100.1
    ping -I 192.168.100.20 192.168.100.1
    ```
 
-2. **使用telnet测试端口连通性**
+2. **Use telnet to test port connectivity**
    ```bash
    telnet 192.168.100.1 4840
    ```
 
-3. **启用调试日志**
+3. **Enable debug logging**
    ```go
-   // 在代码中添加调试输出
+   // Add debug output in code
    debug.Enable = true
    ```
 
-## 高级用法
+## Advanced Usage
 
-### 自定义Dialer
+### Custom Dialer
 
-如果需要更精细的网络控制，可以创建自定义的Dialer：
+If more fine-grained network control is needed, you can create a custom Dialer:
 
 ```go
 import (
@@ -130,7 +130,7 @@ import (
     "github.com/gopcua/opcua/uacp"
 )
 
-// 创建自定义Dialer
+// Create custom Dialer
 customDialer := &uacp.Dialer{
     Dialer: &net.Dialer{
         LocalAddr: &net.TCPAddr{
@@ -140,20 +140,20 @@ customDialer := &uacp.Dialer{
     },
 }
 
-// 使用自定义Dialer
+// Use custom Dialer
 client, err := opcua.NewClient(endpoint, 
     opcua.Dialer(customDialer),
-    // 其他选项...
+    // Other options...
 )
 ```
 
-### 并发连接多个设备
+### Concurrent Connections to Multiple Devices
 
-示例代码中包含了如何同时监控多个设备的示例，参见 `monitorMultipleDevices` 函数。
+The example code includes examples of how to monitor multiple devices simultaneously, see the `monitorMultipleDevices` function.
 
-## 注意事项
+## Notes
 
-1. **端口绑定**: 使用 `:0` 作为端口号让系统自动分配可用端口
-2. **资源管理**: 确保正确关闭客户端连接以释放网络资源
-3. **错误处理**: 网络连接可能不稳定，需要实现适当的错误处理和重连机制
-4. **性能考虑**: 多个并发连接会消耗更多系统资源，需要根据实际情况调整
+1. **Port Binding**: Use `:0` as the port number to let the system automatically assign an available port
+2. **Resource Management**: Ensure client connections are properly closed to release network resources
+3. **Error Handling**: Network connections may be unstable, implement appropriate error handling and reconnection mechanisms
+4. **Performance Considerations**: Multiple concurrent connections will consume more system resources, adjust according to actual needs
